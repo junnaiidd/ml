@@ -1,0 +1,24 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Large Model Files (model.pkl is ~305MB and exceeds GitHub's 100MB limit)
+*.pkl
+*.joblib
+house_price_dashboard/models/
+
+# Generated Outputs / Reports
+house_price_dashboard/eda_output/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
