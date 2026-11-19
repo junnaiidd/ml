@@ -44,7 +44,9 @@ st.set_page_config(
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stApp { background-color: #0f1117; }
+    .stApp { background-color: #0f1117; color: #e2e8f0; }
+    
+    /* ── KPI Cards ────────────────────────────────────────────────────────── */
     .kpi-card {
         background: linear-gradient(135deg, #1e2130 0%, #252840 100%);
         border: 1px solid #3d4270; border-radius: 12px;
@@ -53,18 +55,91 @@ st.markdown("""
     .kpi-label { color: #8b93c4; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
     .kpi-value { color: #ffffff; font-size: 1.9rem; font-weight: 700; }
     .kpi-sub   { color: #6be3b0; font-size: 0.78rem; margin-top: 4px; }
+    
+    /* ── Section Headers ──────────────────────────────────────────────────── */
     .section-header {
-        font-size: 1.1rem; font-weight: 600; color: #c5cef0;
+        font-size: 1.08rem; font-weight: 600; color: #c5cef0;
         border-left: 3px solid #5b6fd6; padding-left: 10px;
-        margin: 24px 0 12px 0;
+        margin: 24px 0 14px 0;
     }
+    
     .metric-pill {
         display: inline-block; background: #1e2130; border: 1px solid #3d4270;
         border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: #c5cef0; margin: 3px;
     }
     .stDataFrame { border-radius: 8px; }
-    section[data-testid="stSidebar"] { background: #13162a; border-right: 1px solid #2a2f52; }
-    .sidebar-title { color: #8b93c4; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    
+    /* ── Sidebar Redesign & Dark Theme Elevation ─────────────────────────── */
+    section[data-testid="stSidebar"] {
+        background: #111424;
+        border-right: 1px solid #232742;
+    }
+    .sidebar-header-box {
+        padding: 6px 2px 14px 2px;
+        border-bottom: 1px solid #232742;
+        margin-bottom: 14px;
+    }
+    .sidebar-logo {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sidebar-subtitle {
+        font-size: 0.72rem;
+        color: #8b93c4;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+    .sidebar-nav-title {
+        color: #7c88cd;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 700;
+        margin: 12px 0 8px 0;
+    }
+    section[data-testid="stSidebar"] .stRadio > div {
+        gap: 4px;
+    }
+    section[data-testid="stSidebar"] .stRadio label {
+        background: #161a2e;
+        border: 1px solid #252a48;
+        border-radius: 8px;
+        padding: 9px 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        font-weight: 500;
+        color: #c5cef0 !important;
+    }
+    section[data-testid="stSidebar"] .stRadio label:hover {
+        background: #1e2340;
+        border-color: #5b6fd6;
+        color: #ffffff !important;
+        transform: translateX(2px);
+    }
+    
+    /* ── Predict Price Grid & Cards ───────────────────────────────────────── */
+    .param-card-header {
+        color: #a5b4fc;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #2b3258;
+    }
+    .model-selector-box {
+        background: #161a2e;
+        border: 1px solid #262c4d;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -193,8 +268,14 @@ y_pred_rf     = bundle["y_pred_rf"]
 # SIDEBAR
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🏠 House Price IQ")
-    st.markdown("---")
+    st.markdown("""
+    <div class="sidebar-header-box">
+        <div class="sidebar-logo">🏠 House Price IQ</div>
+        <div class="sidebar-subtitle">King County, WA • ML Dashboard</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-nav-title">Navigation Menu</div>', unsafe_allow_html=True)
 
     # ── Navigation ────────────────────────────────────────────────────────────
     page = st.radio(
@@ -210,57 +291,23 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # ── Prediction Inputs ─────────────────────────────────────────────────────
-    st.markdown("### 🔮 Quick Predict")
-    st.caption("Fill inputs then go to Predict Price tab")
-
-    sqft_living  = st.slider("Living Area (sq ft)",
-                              int(clean_df.Sqft_living.min()),
-                              int(clean_df.Sqft_living.max()), 2000)
-    sqft_lot     = st.slider("Lot Size (sq ft)", 500,
-                              int(clean_df.Sqft_lot.quantile(0.99)), 8000)
-    sqft_above   = st.slider("Sqft Above Basement", 300,
-                              int(clean_df.Sqft_above.max()), 1500)
-    sqft_bsmt    = st.slider("Basement Sq ft", 0,
-                              int(clean_df.Sqft_basement.max()), 500)
-    grade        = st.slider("Grade (1–13)", 1, 13, 7)
-    condition    = st.slider("Condition (1–5)", 1, 5, 3)
-    bedrooms     = st.slider("Bedrooms", 1, 10, 3)
-    bathrooms    = st.slider("Bathrooms", 1.0, 6.0, 2.0, step=0.25)
-    floors       = st.selectbox("Floors", [1.0, 1.5, 2.0, 2.5, 3.0, 3.5])
-    view         = st.slider("View (0–4)", 0, 4, 0)
-    waterfront   = st.selectbox("Waterfront", [0, 1], format_func=lambda x: "Yes" if x else "No")
-    yr_built     = st.slider("Year Built", int(clean_df.Yr_built.min()),
-                              int(clean_df.Yr_built.max()), 1990)
-    renovated    = st.selectbox("Ever Renovated", [0, 1], format_func=lambda x: "Yes" if x else "No")
-    sqft_l15     = st.slider("Neighbors Avg Living Sqft", 300,
-                              int(clean_df.Sqft_living15.max()), 2000)
-    lat          = st.number_input("Latitude",  value=47.5,  step=0.01, format="%.4f")
-    lon          = st.number_input("Longitude", value=-122.2, step=0.01, format="%.4f")
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Build prediction input row
-# ─────────────────────────────────────────────────────────────────────────────
-sale_year = 2015
-pred_input = pd.DataFrame([{
-    "Sqft_living":   sqft_living,
-    "Sqft_lot":      sqft_lot,
-    "Sqft_above":    sqft_above,
-    "Sqft_basement": sqft_bsmt,
-    "Grade":         grade,
-    "Condition":     condition,
-    "Bedrooms":      bedrooms,
-    "Bathrooms":     bathrooms,
-    "Floors":        floors,
-    "View":          view,
-    "Waterfront":    waterfront,
-    "Yr_built":      yr_built,
-    "Age":           sale_year - yr_built,
-    "Renovated":     renovated,
-    "Sqft_living15": sqft_l15,
-    "Lat":           lat,
-    "Long":          lon,
-}])
+    st.markdown("""
+    <div style="padding: 14px 14px; background: rgba(22, 26, 46, 0.7); border: 1px solid #252a48; border-radius: 10px; margin-top: 10px;">
+        <div style="font-size: 0.68rem; color: #8b93c4; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; font-weight: 700;">System Overview</div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #c5cef0; margin-bottom: 5px;">
+            <span>Dataset</span>
+            <span style="color: #6be3b0; font-weight: 600;">21,613 records</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #c5cef0; margin-bottom: 5px;">
+            <span>Models Active</span>
+            <span style="color: #6be3b0; font-weight: 600;">RF & LR</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #c5cef0;">
+            <span>Top R² Score</span>
+            <span style="color: #6be3b0; font-weight: 600;">0.877 (RF)</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ════════════════════════  PAGE 1 — OVERVIEW & KPIs  ════════════════════════
@@ -671,79 +718,168 @@ elif page == "🤖 ML Models":
 
     # ── Metrics comparison ────────────────────────────────────────────────────
     st.markdown('<div class="section-header">Model Performance Comparison</div>', unsafe_allow_html=True)
-    m1, m2, m3 = st.columns(3)
-    for col, label, key in [(m1,"R² Score","r2"),(m2,"MAE","mae"),(m3,"MSE","mse")]:
-        lr_v = lr_metrics[key]
-        rf_v = rf_metrics[key]
-        fmt  = "${:,.0f}" if key in ("mae","mse") else "{:.4f}"
+    # RMSE derived from the stored test-set MSE (same y_test / same split as R² and MAE)
+    lr_eval = {**lr_metrics, "rmse": float(np.sqrt(lr_metrics["mse"]))}
+    rf_eval = {**rf_metrics, "rmse": float(np.sqrt(rf_metrics["mse"]))}
+
+    m1, m2, m3, m4 = st.columns(4)
+    for col, label, key in [(m1,"R² Score","r2"),(m2,"MAE","mae"),(m3,"RMSE","rmse"),(m4,"MSE","mse")]:
+        lr_v = lr_eval[key]
+        rf_v = rf_eval[key]
+        fmt  = "${:,.0f}" if key in ("mae","rmse","mse") else "{:.4f}"
         col.metric(f"LR — {label}",  fmt.format(lr_v))
         col.metric(f"RF — {label}",  fmt.format(rf_v),
                    delta=f"{((rf_v-lr_v)/abs(lr_v)*100):+.1f}%" if key=="r2" else None)
 
-    metrics_df = pd.DataFrame({
-        "Metric":              ["R²","MAE ($)","MSE"],
-        "Linear Regression":   [lr_metrics["r2"], lr_metrics["mae"], lr_metrics["mse"]],
-        "Random Forest":       [rf_metrics["r2"], rf_metrics["mae"], rf_metrics["mse"]],
+    eval_rows = [("R² (higher is better)", "r2",   "{:.4f}",   True),
+                 ("MAE ($)",               "mae",  "${:,.0f}", False),
+                 ("RMSE ($)",              "rmse", "${:,.0f}", False)]
+    eval_df = pd.DataFrame({
+        "Metric":            [r[0] for r in eval_rows],
+        "Linear Regression": [r[2].format(lr_eval[r[1]]) for r in eval_rows],
+        "Random Forest":     [r[2].format(rf_eval[r[1]]) for r in eval_rows],
+        "Better Model":      [("Random Forest" if (rf_eval[r[1]] > lr_eval[r[1]]) == r[3] else "Linear Regression")
+                              for r in eval_rows],
     })
-    fig = px.bar(metrics_df.melt(id_vars="Metric", var_name="Model", value_name="Value"),
-                 x="Metric", y="Value", color="Model", barmode="group",
-                 title="Model Metrics Comparison",
-                 color_discrete_sequence=["#5b6fd6","#6be3b0"])
-    fig.update_layout(**CHART_THEME)
-    show_chart(fig, "metrics_bar")
+    st.dataframe(eval_df, hide_index=True, use_container_width=True)
+    st.caption(f"All metrics computed on the same held-out test set (n = {len(y_test):,}).")
+
+    MODEL_COLORS = {"Linear Regression": "#5b6fd6", "Random Forest": "#6be3b0"}
+    mc1, mc2 = st.columns(2)
+    with mc1:
+        r2_df = pd.DataFrame({"Model": list(MODEL_COLORS), "R²": [lr_eval["r2"], rf_eval["r2"]]})
+        fig = px.bar(r2_df, x="Model", y="R²", color="Model", color_discrete_map=MODEL_COLORS,
+                     title="R² Score (higher is better)", text=r2_df["R²"].map("{:.4f}".format))
+        fig.update_traces(textposition="outside", cliponaxis=False)
+        fig.update_layout(**CHART_THEME, showlegend=False, yaxis=dict(range=[0, 1], title="R²"))
+        show_chart(fig, "metrics_r2")
+    with mc2:
+        err_df = pd.DataFrame({
+            "Metric": ["MAE", "RMSE", "MAE", "RMSE"],
+            "Model":  ["Linear Regression"] * 2 + ["Random Forest"] * 2,
+            "Value":  [lr_eval["mae"], lr_eval["rmse"], rf_eval["mae"], rf_eval["rmse"]],
+        })
+        fig = px.bar(err_df, x="Metric", y="Value", color="Model", barmode="group",
+                     color_discrete_map=MODEL_COLORS, title="MAE vs RMSE (lower is better)",
+                     text=err_df["Value"].map("${:,.0f}".format))
+        fig.update_traces(textposition="outside", cliponaxis=False)
+        fig.update_layout(**CHART_THEME, yaxis=dict(title="Error ($)", tickprefix="$", tickformat="~s"))
+        show_chart(fig, "metrics_err")
 
     # ── Actual vs Predicted ────────────────────────────────────────────────────
     st.markdown('<div class="section-header">Actual vs Predicted Prices</div>', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    for col, label, y_pred, color in [
-        (c1, "Linear Regression", y_pred_lr, "#5b6fd6"),
-        (c2, "Random Forest",     y_pred_rf, "#6be3b0"),
-    ]:
-        with col:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=y_test, y=y_pred,
-                                     mode="markers",
-                                     marker=dict(color=color, size=4, opacity=0.5),
-                                     name="Predicted"))
-            mn, mx = y_test.min(), y_test.max()
-            fig.add_trace(go.Scatter(x=[mn,mx], y=[mn,mx],
-                                     mode="lines",
-                                     line=dict(color="white", dash="dash"),
-                                     name="Perfect Fit"))
-            fig.update_layout(title=f"{label}: Actual vs Predicted",
-                              xaxis_title="Actual ($)", yaxis_title="Predicted ($)", **CHART_THEME)
-            show_chart(fig, f"avp_{label}")
+
+    # Same test observations for both models (flattened to 1-D arrays to avoid index/shape issues)
+    y_act = np.asarray(y_test, dtype=float).ravel()
+    avp_models = {
+        "Linear Regression": (np.asarray(y_pred_lr, dtype=float).ravel(), "#5b6fd6"),
+        "Random Forest":     (np.asarray(y_pred_rf, dtype=float).ravel(), "#6be3b0"),
+    }
+    avp_view = st.radio("View", ["Side by side", "Linear Regression", "Random Forest", "Overlay both models"],
+                        horizontal=True, key="avp_view")
+
+    def avp_figure(labels, title):
+        fig = go.Figure()
+        for lb in labels:
+            y_p, color = avp_models[lb]
+            fig.add_trace(go.Scatter(x=y_act, y=y_p, mode="markers", name=lb,
+                                     marker=dict(color=color, size=4, opacity=0.45 if len(labels) > 1 else 0.5),
+                                     hovertemplate=f"{lb}<br>Actual: $%{{x:,.0f}}<br>Predicted: $%{{y:,.0f}}<extra></extra>"))
+        lo = min(y_act.min(), *(avp_models[lb][0].min() for lb in labels))
+        hi = max(y_act.max(), *(avp_models[lb][0].max() for lb in labels))
+        fig.add_trace(go.Scatter(x=[lo, hi], y=[lo, hi], mode="lines",
+                                 line=dict(color="white", dash="dash"), name="Perfect Fit",
+                                 hoverinfo="skip"))
+        fig.update_layout(title=title, xaxis_title="Actual Price ($)", yaxis_title="Predicted Price ($)",
+                          xaxis=dict(range=[lo, hi], tickprefix="$", tickformat="~s"),
+                          yaxis=dict(range=[lo, hi], tickprefix="$", tickformat="~s"),
+                          **CHART_THEME)
+        return fig
+
+    if avp_view == "Side by side":
+        c1, c2 = st.columns(2)
+        for col, label in [(c1, "Linear Regression"), (c2, "Random Forest")]:
+            with col:
+                show_chart(avp_figure([label], f"{label}: Actual vs Predicted"), f"avp_{label}")
+    elif avp_view == "Overlay both models":
+        show_chart(avp_figure(list(avp_models), "Actual vs Predicted: Linear Regression vs Random Forest"),
+                   "avp_overlay")
+        st.caption("Click a model name in the legend to hide or show it.")
+    else:
+        show_chart(avp_figure([avp_view], f"{avp_view}: Actual vs Predicted"), f"avp_single_{avp_view}")
 
     # ── Feature Importance ────────────────────────────────────────────────────
-    st.markdown('<div class="section-header">Random Forest Feature Importance (Top 15)</div>', unsafe_allow_html=True)
-    fig = px.bar(importance_df, x="importance", y="feature", orientation="h",
-                 title="Feature Importance — Random Forest",
-                 color="importance", color_continuous_scale="Viridis",
-                 labels={"importance":"Importance Score","feature":"Feature"})
-    fig.update_layout(**CHART_THEME)
-    fig.update_layout(yaxis=dict(autorange="reversed"))
-    show_chart(fig, "fi")
+    st.markdown('<div class="section-header">Random Forest Feature Importance</div>', unsafe_allow_html=True)
+
+    # Read directly from the already-trained Random Forest (no retraining)
+    rf_importances = np.asarray(rf_pipeline.named_steps["model"].feature_importances_, dtype=float)
+    try:
+        rf_feat_names = [n.split("__", 1)[-1] for n in rf_pipeline.named_steps["prep"].get_feature_names_out()]
+    except Exception:
+        rf_feat_names = list(ALL_FEATURES)
+    if len(rf_feat_names) != len(rf_importances):
+        rf_feat_names = list(ALL_FEATURES)
+
+    if len(rf_feat_names) == len(rf_importances):
+        fi_full = (pd.DataFrame({"feature": rf_feat_names, "importance": rf_importances})
+                   .sort_values("importance", ascending=False).reset_index(drop=True))
+        fi_n = st.slider("Number of features to show", 5, len(fi_full), len(fi_full), key="fi_top_n")
+        fi_show = fi_full.head(fi_n)
+        fig = px.bar(fi_show, x="importance", y="feature", orientation="h",
+                     title=f"Feature Importance — Random Forest (Top {fi_n})",
+                     color="importance", color_continuous_scale="Viridis",
+                     labels={"importance":"Importance Score","feature":"Feature"},
+                     text=fi_show["importance"].map("{:.1%}".format))
+        fig.update_traces(textposition="outside", cliponaxis=False,
+                          hovertemplate="%{y}<br>Importance: %{x:.4f}<extra></extra>")
+        fig.update_layout(**CHART_THEME, height=max(380, 30 * fi_n + 140))
+        fig.update_layout(yaxis=dict(autorange="reversed", dtick=1),
+                          xaxis=dict(range=[0, fi_show["importance"].max() * 1.15]))
+        show_chart(fig, "fi")
+    else:
+        st.warning("Feature names do not match the trained Random Forest; showing stored importances.")
+        fig = px.bar(importance_df, x="importance", y="feature", orientation="h",
+                     title="Feature Importance — Random Forest",
+                     color="importance", color_continuous_scale="Viridis",
+                     labels={"importance":"Importance Score","feature":"Feature"})
+        fig.update_layout(**CHART_THEME)
+        fig.update_layout(yaxis=dict(autorange="reversed"))
+        show_chart(fig, "fi")
 
     # ── Summary ───────────────────────────────────────────────────────────────
+    # ── Key Findings text is generated from the trained RF's actual importances ──
+    _fi = fi_full if len(rf_feat_names) == len(rf_importances) else importance_df
+    _fi = _fi.sort_values("importance", ascending=False).reset_index(drop=True)
+    _why = {
+        "Sqft_living":   "interior living area is the main driver of a home's size and value.",
+        "Grade":         "construction and finish quality separates price tiers.",
+        "Lat":           "north-south position captures neighbourhood and market location.",
+        "Long":          "east-west position captures neighbourhood and market location.",
+        "Sqft_living15": "the size of nearby homes reflects the local market level.",
+    }
+    _why_default = "contributes to the model's price splits."
+    findings = "\n".join(
+        f"{i}. **{r.feature}** ({r.importance:.1%}) — {_why.get(r.feature, _why_default)}"
+        for i, r in enumerate(_fi.head(5).itertuples(), 1)
+    )
+    _loc = _fi.set_index("feature")["importance"].reindex(["Lat", "Long"]).sum()
+    findings += (f"\n\nLat and Long together account for {_loc:.1%} of importance. "
+                 "Importance reflects how much the model relies on a feature, not a causal effect.")
+
     st.markdown("---")
     st.markdown("""
 ### 📝 Key Findings & Conclusions
 
 **Most Influential Features** (from Random Forest importance):
-- **Lat / Long** — Geographic coordinates are the strongest location signals in King County.
-- **Sqft_living** — Living area is the top structural predictor of price.
-- **Grade** — Building quality grade strongly differentiates price tiers.
-- **Sqft_living15** — Neighborhood average living size reflects local market value.
-- **Waterfront** — Waterfront properties command a significant price premium (~3×).
+{findings}
 
 **Model Performance:**
-| Model | R² | MAE |
-|---|---|---|
-| Linear Regression | {:.3f} | ${:,.0f} |
-| Random Forest | {:.3f} | ${:,.0f} |
+| Model | R² | MAE | RMSE |
+|---|---|---|---|
+| Linear Regression | {:.3f} | ${:,.0f} | ${:,.0f} |
+| Random Forest | {:.3f} | ${:,.0f} | ${:,.0f} |
 
-Random Forest outperforms Linear Regression by ~{:.1f}% in R², capturing non-linear 
-location and quality interaction effects.
+Random Forest outperforms Linear Regression by {:.1f} percentage points of R² on the same test set.
 
 **Observed Inconsistencies:**
 - One record had 33 bedrooms (likely a data entry error) — removed.
@@ -755,9 +891,10 @@ location and quality interaction effects.
 - Feature engineering added 5 new informative columns.
 - Outlier bedrooms removed to prevent model distortion.
 """.format(
-        lr_metrics["r2"], lr_metrics["mae"],
-        rf_metrics["r2"], rf_metrics["mae"],
+        lr_metrics["r2"], lr_metrics["mae"], float(np.sqrt(lr_metrics["mse"])),
+        rf_metrics["r2"], rf_metrics["mae"], float(np.sqrt(rf_metrics["mse"])),
         (rf_metrics["r2"] - lr_metrics["r2"]) * 100,
+        findings=findings,
     ))
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -765,54 +902,156 @@ location and quality interaction effects.
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🔮 Predict Price":
     st.markdown("# 🔮 House Price Predictor")
-    st.caption("Adjust inputs in the sidebar and click Predict.")
+    st.caption("Configure property characteristics below, select a model, and generate an instantaneous market price valuation.")
 
-    model_choice = st.radio("Choose Model", ["Random Forest (recommended)", "Linear Regression"],
-                             horizontal=True)
+    # ── Property Input Parameters Grid (Relocated Quick Predict) ──────────────
+    st.markdown('<div class="section-header">🏡 Property Specifications & Inputs</div>', unsafe_allow_html=True)
 
-    if st.button("🏠 Predict Price", type="primary"):
+    col1, col2, col3 = st.columns(3, gap="medium")
+
+    with col1:
+        st.markdown('<div class="param-card-header">📐 Area & Living Space</div>', unsafe_allow_html=True)
+        sqft_living = st.slider("Living Area (sq ft)",
+                                int(clean_df.Sqft_living.min()),
+                                int(clean_df.Sqft_living.max()), 2000,
+                                help="Interior living area in square feet")
+        sqft_lot    = st.slider("Lot Size (sq ft)", 500,
+                                int(clean_df.Sqft_lot.quantile(0.99)), 8000,
+                                help="Total land / parcel lot size in square feet")
+        sqft_above  = st.slider("Sqft Above Basement", 300,
+                                int(clean_df.Sqft_above.max()), 1500,
+                                help="Square footage of interior living space above ground level")
+        sqft_bsmt   = st.slider("Basement Sq ft", 0,
+                                int(clean_df.Sqft_basement.max()), 500,
+                                help="Square footage of below-grade basement space")
+        sqft_l15    = st.slider("Neighbors Avg Living Sqft", 300,
+                                int(clean_df.Sqft_living15.max()), 2000,
+                                help="Average interior living space of the 15 closest neighboring homes")
+
+    with col2:
+        st.markdown('<div class="param-card-header">🛋️ Rooms & Building Quality</div>', unsafe_allow_html=True)
+        bedrooms  = st.slider("Bedrooms", 1, 10, 3, help="Number of bedrooms")
+        bathrooms = st.slider("Bathrooms", 1.0, 6.0, 2.0, step=0.25, help="Number of bathrooms (increments of 0.25)")
+        floors    = st.selectbox("Floors", [1.0, 1.5, 2.0, 2.5, 3.0, 3.5], index=0, help="Number of levels / floors in the home")
+        grade     = st.slider("Grade (1–13)", 1, 13, 7, help="King County construction quality and architectural design grade (1-13)")
+        condition = st.slider("Condition (1–5)", 1, 5, 3, help="Overall property maintenance and physical condition index (1-5)")
+
+    with col3:
+        st.markdown('<div class="param-card-header">📍 Location & History</div>', unsafe_allow_html=True)
+        waterfront = st.selectbox("Waterfront", [0, 1], format_func=lambda x: "Yes" if x else "No", help="Whether the property overlooks a waterfront")
+        view       = st.slider("View (0–4)", 0, 4, 0, help="Quality rating of property view (0 = None, 4 = Outstanding)")
+        yr_built   = st.slider("Year Built", int(clean_df.Yr_built.min()),
+                               int(clean_df.Yr_built.max()), 1990, help="Year the structure was originally constructed")
+        renovated  = st.selectbox("Ever Renovated", [0, 1], format_func=lambda x: "Yes" if x else "No", help="Whether the property was ever remodeled / renovated")
+        
+        loc1, loc2 = st.columns(2)
+        with loc1:
+            lat = st.number_input("Latitude", value=47.5000, step=0.01, format="%.4f", help="Geographic latitude coordinate")
+        with loc2:
+            lon = st.number_input("Longitude", value=-122.2000, step=0.01, format="%.4f", help="Geographic longitude coordinate")
+
+    # ── Build prediction input row ─────────────────────────────────────────────
+    sale_year = 2015
+    pred_input = pd.DataFrame([{
+        "Sqft_living":   sqft_living,
+        "Sqft_lot":      sqft_lot,
+        "Sqft_above":    sqft_above,
+        "Sqft_basement": sqft_bsmt,
+        "Grade":         grade,
+        "Condition":     condition,
+        "Bedrooms":      bedrooms,
+        "Bathrooms":     bathrooms,
+        "Floors":        floors,
+        "View":          view,
+        "Waterfront":    waterfront,
+        "Yr_built":      yr_built,
+        "Age":           sale_year - yr_built,
+        "Renovated":     renovated,
+        "Sqft_living15": sqft_l15,
+        "Lat":           lat,
+        "Long":          lon,
+    }])
+
+    # ── Model Selection & Action Control Bar ──────────────────────────────────
+    st.markdown('<div class="section-header">🤖 Model Selection & Execution</div>', unsafe_allow_html=True)
+    m_col1, m_col2 = st.columns([3, 2], gap="large")
+
+    with m_col1:
+        model_choice = st.radio(
+            "Choose Model",
+            ["Random Forest (recommended)", "Linear Regression"],
+            horizontal=True,
+            help="Random Forest (R² ~0.88) captures complex non-linear feature relationships. Linear Regression (R² ~0.70) provides a linear baseline."
+        )
+
+    with m_col2:
+        st.write("")  # visual vertical alignment
+        predict_button = st.button("🏠 Predict Price", type="primary", use_container_width=True)
+
+    # ── Prediction Execution & State Management ────────────────────────────────
+    if "has_predicted" not in st.session_state:
+        st.session_state.has_predicted = False
+
+    if predict_button:
+        st.session_state.has_predicted = True
         pipeline = rf_pipeline if "Random" in model_choice else lr_pipeline
-        price    = pipeline.predict(pred_input)[0]
+        st.session_state.last_price = pipeline.predict(pred_input)[0]
+        st.session_state.last_model_choice = model_choice
+        st.session_state.last_pred_input = pred_input
 
-        st.markdown(f"""
-<div style="background:linear-gradient(135deg,#1e2130,#252840);
-    border:2px solid #5b6fd6;border-radius:16px;padding:32px;text-align:center;margin:20px 0;">
-  <div style="color:#8b93c4;font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;">
-      Estimated Sale Price</div>
-  <div style="color:#6be3b0;font-size:3.5rem;font-weight:800;margin:12px 0;">
-      ${price:,.0f}</div>
-  <div style="color:#8b93c4;font-size:0.82rem;">
-      Model: {model_choice}</div>
-</div>""", unsafe_allow_html=True)
+    # ── Results Display ────────────────────────────────────────────────────────
+    if st.session_state.has_predicted:
+        price      = st.session_state.last_price
+        used_model = st.session_state.last_model_choice
+        used_input = st.session_state.last_pred_input
 
-        pct = (clean_df.Price < price).mean() * 100
-        st.metric("Percentile in Dataset", f"{pct:.0f}th",
-                  help="What percentage of sold homes cost less than this estimate")
+        st.markdown('<div class="section-header">🎯 Valuation Results</div>', unsafe_allow_html=True)
 
-        st.markdown("### Input Summary")
-        st.dataframe(pred_input.T.rename(columns={0: "Value"}), use_container_width=True)
+        res_col1, res_col2 = st.columns([1, 1], gap="large")
 
-        if PLOTLY_AVAILABLE:
-            mn, mx = clean_df.Price.min(), clean_df.Price.max()
-            fig = go.Figure(go.Indicator(
-                mode="gauge+number",
-                value=price,
-                domain={"x":[0,1],"y":[0,1]},
-                title={"text":"Estimated Price ($)", "font":{"color":"#c5cef0"}},
-                number={"prefix":"$","font":{"color":"#6be3b0","size":40}},
-                gauge={
-                    "axis":    {"range":[mn, mx], "tickcolor":"#8b93c4"},
-                    "bar":     {"color":"#6be3b0"},
-                    "bgcolor": "#1a1d2e",
-                    "steps":   [
-                        {"range":[mn, clean_df.Price.quantile(.33)],  "color":"#2a1d3e"},
-                        {"range":[clean_df.Price.quantile(.33), clean_df.Price.quantile(.66)], "color":"#1e2d3e"},
-                        {"range":[clean_df.Price.quantile(.66), mx],  "color":"#1e3e2a"},
-                    ],
-                    "threshold":{"line":{"color":"#5b6fd6","width":3},
-                                 "thickness":0.75,"value":clean_df.Price.median()},
-                }
-            ))
-            fig.update_layout(**CHART_THEME, height=350)
-            show_chart(fig, "gauge")
-            st.caption("Blue threshold line = dataset median price")
+        with res_col1:
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg, #1e2130 0%, #252840 100%);
+                border:2px solid #5b6fd6; border-radius:16px; padding:28px 24px; text-align:center; margin-bottom:16px;">
+              <div style="color:#8b93c4; font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; font-weight:600;">
+                  Estimated Market Value</div>
+              <div style="color:#6be3b0; font-size:3.2rem; font-weight:800; margin:12px 0;">
+                  ${price:,.0f}</div>
+              <div style="color:#8b93c4; font-size:0.82rem;">
+                  Model Applied: <span style="color:#ffffff; font-weight:600;">{used_model}</span></div>
+            </div>""", unsafe_allow_html=True)
+
+            pct = (clean_df.Price < price).mean() * 100
+            st.metric("Price Percentile in King County Dataset", f"{pct:.1f}%",
+                      help="Percentage of sales in King County dataset with a lower price")
+
+        with res_col2:
+            if PLOTLY_AVAILABLE:
+                mn, mx = clean_df.Price.min(), clean_df.Price.max()
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=price,
+                    domain={"x":[0,1],"y":[0,1]},
+                    title={"text":"Estimated Price vs Market Range", "font":{"color":"#c5cef0", "size": 14}},
+                    number={"prefix":"$","font":{"color":"#6be3b0","size":32}},
+                    gauge={
+                        "axis":    {"range":[mn, mx], "tickcolor":"#8b93c4"},
+                        "bar":     {"color":"#6be3b0"},
+                        "bgcolor": "#1a1d2e",
+                        "steps":   [
+                            {"range":[mn, clean_df.Price.quantile(.33)],  "color":"#2a1d3e"},
+                            {"range":[clean_df.Price.quantile(.33), clean_df.Price.quantile(.66)], "color":"#1e2d3e"},
+                            {"range":[clean_df.Price.quantile(.66), mx],  "color":"#1e3e2a"},
+                        ],
+                        "threshold":{"line":{"color":"#5b6fd6","width":3},
+                                     "thickness":0.75,"value":clean_df.Price.median()},
+                    }
+                ))
+                fig.update_layout(**CHART_THEME, height=290, margin=dict(l=20, r=20, t=30, b=10))
+                show_chart(fig, "gauge")
+                st.caption("Blue threshold line = King County median sale price (~$450,000)")
+
+        with st.expander("📋 View Complete Input Feature Summary", expanded=False):
+            st.dataframe(used_input.T.rename(columns={0: "Input Value"}), use_container_width=True)
+    else:
+        st.info("💡 Adjust the property specifications above, choose your model, and click **Predict Price** to calculate the estimated value.")
